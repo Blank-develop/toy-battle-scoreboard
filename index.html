@@ -186,11 +186,12 @@ const COLORS = {
 
 const DATA = {
   matches: 2,
+  // a player is either "Name" (photo derived from name) or {name, photo}
   teams: [
-    {id:'team1', name:'Team 1', players:['Noy','Pele','Bob']},
-    {id:'team2', name:'Team 2', players:['Lasun','Moto','Bank']},
-    {id:'team3', name:'Team 3', players:['Katai','Mui','Alo']},
-    {id:'team4', name:'Team 4', players:['Aiy Savath','Nico','Mina']},
+    {id:'team1', name:'Team 1', players:[{name:'ຄົນຈີນ', photo:'Noy.png'}, 'Pele', 'Bob']},
+    {id:'team2', name:'Team 2', players:[{name:'ໄທທ່າແຂກຊົ່ວຄາວ', photo:'Lasun.png'}, {name:'ໄທທ່າແຂກໃນເມືອງ', photo:'Moto.png'}, 'Bank']},
+    {id:'team3', name:'Team 3', players:['Katai', 'Mui', {name:'ຫົວໜ້າກົມ', photo:'Alo.png'}]},
+    {id:'team4', name:'Team 4', players:['Aiy Savath', 'Nico', 'Mina']},
   ],
   // scores[teamId][playerIndex] = [starsMatch1, starsMatch2]
   scores:{
@@ -205,8 +206,9 @@ const DATA = {
 function starsAt(tid,i,m){ return ((DATA.scores[tid]||{})[i]||[])[m] || 0; }
 function playerTotal(tid,i){ let s=0; for(let m=0;m<DATA.matches;m++) s+=starsAt(tid,i,m); return s; }
 function teamTotal(tid){ const t=DATA.teams.find(x=>x.id===tid); return t.players.reduce((a,_,i)=>a+playerTotal(tid,i),0); }
-function initials(name){ return String(name).trim().split(/\s+/).map(w=>w[0]||'').slice(0,2).join('').toUpperCase()||'?'; }
-function photoFor(name){ return encodeURI(String(name).trim().replace(/\s+/g,'_')+'.png'); }
+function pName(pl){ return typeof pl==='string' ? pl : pl.name; }
+function pPhoto(pl){ return encodeURI(typeof pl==='string' ? pl.trim().replace(/\s+/g,'_')+'.png' : (pl.photo || pl.name.trim().replace(/\s+/g,'_')+'.png')); }
+function initials(name){ return String(name).trim().split(/\s+/).map(w=>Array.from(w)[0]||'').slice(0,2).join('').toUpperCase()||'?'; }
 function imgFail(el){ const s=document.createElement('span'); s.className='avatar ph'; s.style.background=el.dataset.dot; s.textContent=el.dataset.ini; el.replaceWith(s); }
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -223,21 +225,21 @@ function render(){
 
     // rank members within the team by total stars (highest first)
     const order = t.players
-      .map((p,i)=>({p,i,total:playerTotal(t.id,i)}))
+      .map((pl,i)=>({name:pName(pl), photo:pPhoto(pl), i, total:playerTotal(t.id,i)}))
       .sort((a,b)=> b.total-a.total || a.i-b.i);
 
     let rows = '';
-    order.forEach(({p,i,total},rankIdx)=>{
+    order.forEach(({name,photo,i,total},rankIdx)=>{
       const rank = rankIdx+1;
       const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
       const span = DATA.matches;
       const avatar =
-        `<img class="avatar" src="${photoFor(p)}" alt="" data-dot="${dot}" data-ini="${initials(p)}" onerror="imgFail(this)">`;
+        `<img class="avatar" src="${photo}" alt="" data-dot="${dot}" data-ini="${initials(name)}" onerror="imgFail(this)">`;
       for(let m=0; m<DATA.matches; m++){
         rows += '<tr>';
         if(m===0){
           rows += `<td class="rank-col" rowspan="${span}"><span class="rankpill r${rank}">${medal||rank}</span></td>`;
-          rows += `<td class="player" rowspan="${span}"><span class="player-cell">${avatar}<span class="pname">${esc(p)}</span></span></td>`;
+          rows += `<td class="player" rowspan="${span}"><span class="player-cell">${avatar}<span class="pname">${esc(name)}</span></span></td>`;
         }
         rows += `<td class="match-no">${m+1}</td>`;
         rows += `<td class="stars-cell">${starsAt(t.id,i,m)}</td>`;
