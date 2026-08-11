@@ -218,6 +218,49 @@
     .elim-wrap .stamp{animation:none; opacity:1; transform:rotate(-15deg) scale(1)}
     .elim-wrap .boot,.elim-wrap .dizzy,.elim-wrap .plane,.elim-wrap .flag,.elim-wrap .byebye{opacity:0}
   }
+  /* ---- 1st-place fire / Super-Saiyan aura ---- */
+  .fx-wrap{position:relative; display:inline-flex; flex:none}
+  .fx-wrap .avatar{
+    position:relative; z-index:1; border-color:#ffe082;
+    animation:ssjRing .45s ease-in-out infinite alternate;
+  }
+  @keyframes ssjRing{
+    from{box-shadow:0 0 0 2px #ffca28, 0 0 10px 2px rgba(255,171,0,.6)}
+    to{box-shadow:0 0 0 3px #fff1a8, 0 0 22px 7px rgba(255,193,7,.95)}
+  }
+  .fx-wrap .aura{
+    position:absolute; inset:-11px; border-radius:50%; z-index:0;
+    background:radial-gradient(circle, rgba(255,224,90,.9) 0%, rgba(255,152,0,.5) 42%, rgba(255,120,0,0) 70%);
+    filter:blur(3px); animation:auraPulse .7s ease-in-out infinite alternate;
+  }
+  @keyframes auraPulse{from{transform:scale(.9); opacity:.6} to{transform:scale(1.15); opacity:1}}
+  .fx-wrap .flame{
+    position:absolute; top:-16px; left:50%; z-index:2; font-size:22px;
+    filter:drop-shadow(0 0 5px rgba(255,140,0,.9));
+    animation:flick .16s steps(2) infinite;
+  }
+  @keyframes flick{
+    from{transform:translateX(-50%) scale(1) rotate(-4deg)}
+    to{transform:translateX(-50%) scale(1.15) rotate(4deg)}
+  }
+  .fx-wrap .spark{
+    position:absolute; bottom:8px; width:6px; height:6px; border-radius:50%; z-index:2;
+    background:#ffe082; box-shadow:0 0 6px 1px #ffb300; opacity:0;
+  }
+  .fx-wrap .spark.s1{left:6px;  animation:rise 1s   linear infinite}
+  .fx-wrap .spark.s2{left:48%;  animation:rise 1.2s linear .3s infinite}
+  .fx-wrap .spark.s3{right:6px; animation:rise .9s  linear .55s infinite}
+  @keyframes rise{
+    0%{opacity:0; transform:translateY(4px) scale(.6)}
+    20%{opacity:1}
+    100%{opacity:0; transform:translateY(-38px) scale(.2)}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .fx-wrap .avatar{animation:none; box-shadow:0 0 0 3px #ffca28, 0 0 14px 4px rgba(255,171,0,.7)}
+    .fx-wrap .aura{animation:none; opacity:.8}
+    .fx-wrap .flame{animation:none}
+    .fx-wrap .spark{animation:none; opacity:0}
+  }
   .match-no{color:var(--muted); font-variant-numeric:tabular-nums; font-weight:600}
   .stars-cell{font-weight:800; font-variant-numeric:tabular-nums; color:var(--ink)}
   .wl{
@@ -347,10 +390,13 @@ function render(){
       const span = DATA.matches;
       let avatar =
         `<img class="avatar" src="${photo}" alt="" data-dot="${dot}" data-ini="${initials(name)}" onerror="imgFail(this)">`;
+      const leader = !elim && rank===1 && total>0;   // team's top scorer gets the fire aura
       if(elim){
         avatar = `<span class="elim-wrap">${avatar}<span class="boot">🥾</span><span class="dizzy">💫</span><span class="stamp">OUT!</span><span class="plane">✈️</span><span class="flag">🇨🇳</span><span class="byebye">再见!</span></span>`;
+      } else if(leader){
+        avatar = `<span class="fx-wrap"><span class="aura"></span>${avatar}<span class="flame">🔥</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span></span>`;
       }
-      const cellCls = 'player-cell' + (elim ? ' elim' : '');
+      const cellCls = 'player-cell' + (elim ? ' elim' : '') + (leader ? ' lead' : '');
       for(let m=0; m<DATA.matches; m++){
         rows += '<tr>';
         if(m===0){
