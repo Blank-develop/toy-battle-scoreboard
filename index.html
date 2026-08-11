@@ -131,36 +131,39 @@
   }
   @keyframes tagBlink{0%,60%{opacity:1}61%,100%{opacity:.45}}
   .elim-wrap{position:relative; display:inline-flex; flex:none}
-  .elim .avatar{filter:grayscale(1) contrast(.92) brightness(.98); animation:elimWobble 2.8s ease-in-out infinite; transform-origin:50% 90%}
-  @keyframes elimWobble{
-    0%,54%{transform:rotate(0) translate(0,0)}
-    58%{transform:rotate(-20deg) translate(-5px,2px)}   /* boot connects */
-    64%{transform:rotate(16deg) translate(7px,-3px)}
-    70%{transform:rotate(-9deg) translate(-2px,0)}
-    76%{transform:rotate(6deg)}
-    82%{transform:rotate(-3deg)}
-    88%,100%{transform:rotate(0) translate(0,0)}
+  /* Master 5s saga: idle -> kicked & dizzy -> OUT stamp -> launched off to China -> reset */
+  .elim .avatar{filter:grayscale(1) contrast(.92) brightness(.98); transform-origin:50% 90%; animation:elimSaga 5s ease-in-out infinite}
+  @keyframes elimSaga{
+    0%,48%{transform:rotate(0) translate(0,0) scale(1); opacity:1}
+    52%{transform:rotate(-20deg) translate(-5px,2px) scale(1); opacity:1}   /* boot connects */
+    57%{transform:rotate(16deg) translate(7px,-3px) scale(1)}
+    62%{transform:rotate(-9deg) translate(-2px,0) scale(1)}
+    67%{transform:rotate(0) translate(0,0) scale(1); opacity:1}              /* dazed, holding OUT stamp */
+    71%{transform:rotate(-16deg) translate(-7px,1px) scale(1); opacity:1}    /* wind up */
+    84%{transform:rotate(680deg) translate(150px,-95px) scale(.12); opacity:0}  /* launched away */
+    85%,94%{opacity:0}
+    100%{transform:rotate(0) translate(0,0) scale(1); opacity:1}             /* comes back for the next round */
   }
   .elim-wrap .boot{
     position:absolute; left:-8px; bottom:-2px; font-size:24px; z-index:3; opacity:0;
-    animation:bootKick 2.8s ease-in-out infinite; will-change:transform,opacity;
+    animation:bootKick 5s ease-in-out infinite; will-change:transform,opacity;
   }
   @keyframes bootKick{
-    0%,46%{transform:translateX(-34px) rotate(-12deg); opacity:0}
-    54%{transform:translateX(8px) rotate(24deg); opacity:1}   /* kick lands */
-    62%{transform:translateX(-2px) rotate(6deg); opacity:1}
-    72%{transform:translateX(-34px) rotate(-12deg); opacity:0}
+    0%,45%{transform:translateX(-34px) rotate(-12deg); opacity:0}
+    52%{transform:translateX(8px) rotate(24deg); opacity:1}   /* kick lands */
+    60%{transform:translateX(-2px) rotate(6deg); opacity:1}
+    70%{transform:translateX(-34px) rotate(-12deg); opacity:0}
     100%{opacity:0}
   }
   .elim-wrap .dizzy{
     position:absolute; top:-10px; right:-6px; font-size:16px; z-index:3; opacity:0;
-    animation:dizzy 2.8s ease-in-out infinite;
+    animation:dizzy 5s ease-in-out infinite;
   }
   @keyframes dizzy{
-    0%,56%{opacity:0; transform:scale(.4) rotate(0)}
-    64%{opacity:1; transform:scale(1) rotate(20deg)}
-    86%{opacity:1; transform:scale(1) rotate(-20deg)}
-    92%,100%{opacity:0; transform:scale(.6)}
+    0%,50%{opacity:0; transform:scale(.4) rotate(0)}
+    57%{opacity:1; transform:scale(1) rotate(20deg)}
+    66%{opacity:1; transform:scale(1) rotate(-20deg)}
+    70%,100%{opacity:0; transform:scale(.6)}
   }
   .elim-wrap .stamp{
     position:absolute; inset:0; margin:auto; height:22px; z-index:4;
@@ -168,19 +171,52 @@
     background:#c0392b; color:#fff; font-weight:900; font-size:13px; letter-spacing:.5px;
     border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.35); white-space:nowrap;
     transform:rotate(-15deg) scale(2.4); opacity:0; width:max-content;
-    animation:stampSlap 2.8s ease-in-out infinite;
+    animation:stampSlap 5s ease-in-out infinite;
   }
   @keyframes stampSlap{
-    0%,60%{opacity:0; transform:rotate(-15deg) scale(2.4)}
-    66%{opacity:1; transform:rotate(-15deg) scale(.85)}
-    72%{transform:rotate(-15deg) scale(1.08)}
-    78%,90%{opacity:1; transform:rotate(-15deg) scale(1)}
-    100%{opacity:0; transform:rotate(-15deg) scale(1)}
+    0%,54%{opacity:0; transform:rotate(-15deg) scale(2.4)}
+    59%{opacity:1; transform:rotate(-15deg) scale(.85)}
+    63%{transform:rotate(-15deg) scale(1.08)}
+    67%{opacity:1; transform:rotate(-15deg) scale(1)}
+    70%,100%{opacity:0; transform:rotate(-15deg) scale(1)}   /* clears just before launch */
+  }
+  /* fly-away back to China */
+  .elim-wrap .plane{
+    position:absolute; left:0; bottom:6px; font-size:22px; z-index:5; opacity:0;
+    animation:planeFly 5s ease-in-out infinite;
+  }
+  @keyframes planeFly{
+    0%,70%{opacity:0; transform:translate(-4px,4px) rotate(-8deg) scale(.6)}
+    74%{opacity:1; transform:translate(6px,-6px) rotate(-16deg) scale(1)}
+    88%{opacity:1; transform:translate(120px,-80px) rotate(-18deg) scale(.7)}
+    93%,100%{opacity:0; transform:translate(150px,-95px) rotate(-18deg) scale(.5)}
+  }
+  .elim-wrap .flag{
+    position:absolute; left:0; bottom:6px; font-size:16px; z-index:5; opacity:0;
+    animation:flagTrail 5s ease-in-out infinite;
+  }
+  @keyframes flagTrail{
+    0%,72%{opacity:0; transform:translate(0,0) scale(.5)}
+    78%{opacity:1; transform:translate(2px,-3px) scale(.9)}
+    90%{opacity:1; transform:translate(95px,-64px) scale(.7)}
+    94%,100%{opacity:0; transform:translate(120px,-78px) scale(.5)}
+  }
+  .elim-wrap .byebye{
+    position:absolute; top:-15px; left:50%; z-index:5; font-size:11px; font-weight:900;
+    color:#c0392b; white-space:nowrap; opacity:0; text-shadow:0 1px 2px rgba(255,255,255,.8);
+    animation:byebye 5s ease-in-out infinite;
+  }
+  @keyframes byebye{
+    0%,73%{opacity:0; transform:translate(-50%,4px)}
+    80%{opacity:1; transform:translate(-50%,-6px)}
+    90%{opacity:1; transform:translate(-50%,-12px)}
+    93%,100%{opacity:0; transform:translate(-50%,-16px)}
   }
   @media(prefers-reduced-motion:reduce){
-    .elim .avatar,.elim-wrap .boot,.elim-wrap .dizzy,.elim-wrap .stamp,.elim-tag{animation:none}
-    .elim-wrap .stamp{opacity:1; transform:rotate(-15deg) scale(1)}
-    .elim-wrap .boot,.elim-wrap .dizzy{opacity:0}
+    .elim .avatar{animation:none; opacity:1}
+    .elim-wrap .boot,.elim-wrap .dizzy,.elim-wrap .plane,.elim-wrap .flag,.elim-wrap .byebye,.elim-tag{animation:none}
+    .elim-wrap .stamp{animation:none; opacity:1; transform:rotate(-15deg) scale(1)}
+    .elim-wrap .boot,.elim-wrap .dizzy,.elim-wrap .plane,.elim-wrap .flag,.elim-wrap .byebye{opacity:0}
   }
   .match-no{color:var(--muted); font-variant-numeric:tabular-nums; font-weight:600}
   .stars-cell{font-weight:800; font-variant-numeric:tabular-nums; color:var(--ink)}
@@ -312,7 +348,7 @@ function render(){
       let avatar =
         `<img class="avatar" src="${photo}" alt="" data-dot="${dot}" data-ini="${initials(name)}" onerror="imgFail(this)">`;
       if(elim){
-        avatar = `<span class="elim-wrap">${avatar}<span class="boot">🥾</span><span class="dizzy">💫</span><span class="stamp">OUT!</span></span>`;
+        avatar = `<span class="elim-wrap">${avatar}<span class="boot">🥾</span><span class="dizzy">💫</span><span class="stamp">OUT!</span><span class="plane">✈️</span><span class="flag">🇨🇳</span><span class="byebye">再见!</span></span>`;
       }
       const cellCls = 'player-cell' + (elim ? ' elim' : '');
       for(let m=0; m<DATA.matches; m++){
