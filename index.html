@@ -184,6 +184,13 @@
   }
   .match-no{color:var(--muted); font-variant-numeric:tabular-nums; font-weight:600}
   .stars-cell{font-weight:800; font-variant-numeric:tabular-nums; color:var(--ink)}
+  .wl{
+    display:inline-grid; place-items:center; min-width:44px; padding:3px 8px; border-radius:999px;
+    font-size:10px; font-weight:900; letter-spacing:.5px;
+  }
+  .wl.w{background:#e6f4ea; color:#1e7a3d; border:1px solid #b7e0c4}
+  .wl.l{background:#fdecea; color:#c0392b; border:1px solid #f3c6c0}
+  .wl.none{color:#c9c9b8; font-weight:700}
   .total-cell{font-weight:900; color:var(--star); font-size:16px; background:#fffdf3; white-space:nowrap}
   .total-cell .s{font-size:12px}
 
@@ -211,6 +218,7 @@
     .avatar{width:54px; height:54px; border-width:2px}
     .avatar.ph{font-size:18px}
     .total-cell{font-size:14px}
+    .wl{min-width:34px; padding:3px 5px; font-size:9px}
   }
   @media(max-width:380px){
     .leader{grid-template-columns:1fr}
@@ -260,10 +268,17 @@ const DATA = {
     team3:{ 0:[0,0],   1:[8,0],   2:[14,0] },     // Katai 0, Mui 8, Alo 14
     team4:{ 0:[0,0],   1:[0,0],   2:[0,0] },
   },
+  // results[teamId][playerIndex] = ['W'|'L'|'' per match]
+  results:{
+    team1:{ 0:['L','W'], 1:['L','W'], 2:['W','L'] },  // Noy L/W, Pele L/W, Bob W/L
+    team2:{ 1:['L',''],  2:['W',''] },                 // Moto lose, Bank win
+    team3:{ 1:['L',''],  2:['W',''] },                 // Mui lose, Alo win
+  },
 };
 
 /* ---------------- Helpers ---------------- */
 function starsAt(tid,i,m){ return ((DATA.scores[tid]||{})[i]||[])[m] || 0; }
+function resultAt(tid,i,m){ return (((DATA.results||{})[tid]||{})[i]||[])[m] || ''; }
 function playerTotal(tid,i){ let s=0; for(let m=0;m<DATA.matches;m++) s+=starsAt(tid,i,m); return s; }
 function teamTotal(tid){ const t=DATA.teams.find(x=>x.id===tid); return t.players.reduce((a,_,i)=>a+playerTotal(tid,i),0); }
 function pName(pl){ return typeof pl==='string' ? pl : pl.name; }
@@ -308,6 +323,8 @@ function render(){
         }
         rows += `<td class="match-no">${m+1}</td>`;
         rows += `<td class="stars-cell">${starsAt(t.id,i,m)}</td>`;
+        const wl = resultAt(t.id,i,m);
+        rows += `<td>${wl==='W'?'<span class="wl w">WIN</span>':wl==='L'?'<span class="wl l">LOSE</span>':'<span class="wl none">–</span>'}</td>`;
         if(m===0){
           rows += `<td class="total-cell" rowspan="${span}">${total} <span class="s">⭐</span></td>`;
         }
@@ -327,6 +344,7 @@ function render(){
             <th class="player-h">Player</th>
             <th>Match</th>
             <th>Stars</th>
+            <th>W/L</th>
             <th>Total&nbsp;Stars</th>
           </tr></thead>
           <tbody>${rows}</tbody>
