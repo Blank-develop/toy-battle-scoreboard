@@ -289,6 +289,8 @@
   .wl.w{background:#e6f4ea; color:#1e7a3d; border:1px solid #b7e0c4}
   .wl.l{background:#fdecea; color:#c0392b; border:1px solid #f3c6c0}
   .wl.none{color:#c9c9b8; font-weight:700}
+  .point-cell{font-weight:900; color:#3557b7; font-size:17px; background:#eef2fd; white-space:nowrap; font-variant-numeric:tabular-nums}
+  .point-cell .pt{font-size:10px; font-weight:800; opacity:.7; margin-left:2px}
   .total-cell{font-weight:900; color:var(--star); font-size:16px; background:#fffdf3; white-space:nowrap}
   .total-cell .s{font-size:12px}
 
@@ -364,20 +366,23 @@ const DATA = {
     team1:{ 0:[10,16], 1:[17,21], 2:[15,19] },   // Noy 10/16, Pele 17/21, Bob 15/19
     team2:{ 0:[0,0],   1:[2,0],   2:[16,0] },     // Lasun 0, Moto 2, Bank 16
     team3:{ 0:[0,0],   1:[8,0],   2:[14,0] },     // Katai 0, Mui 8, Alo 14
-    team4:{ 0:[0,0],   1:[0,0],   2:[0,0] },
+    team4:{ 0:14, 1:27, 2:15 },   // totals only (per-match split not recorded): Aiy Savath 14, Nico 27, Mina 15
   },
   // results[teamId][playerIndex] = ['W'|'L'|'' per match]
   results:{
     team1:{ 0:['L','W'], 1:['L','W'], 2:['W','L'] },  // Noy L/W, Pele L/W, Bob W/L
     team2:{ 1:['L',''],  2:['W',''] },                 // Moto lose, Bank win
     team3:{ 1:['L',''],  2:['W',''] },                 // Mui lose, Alo win
+    team4:{ 0:['L','W'], 1:['W','W'], 2:['L','L'] },  // Aiy Savath L/W, Nico W/W, Mina L/L
   },
 };
 
 /* ---------------- Helpers ---------------- */
-function starsAt(tid,i,m){ return ((DATA.scores[tid]||{})[i]||[])[m] || 0; }
+function scoreEntry(tid,i){ return (DATA.scores[tid]||{})[i]; }
+function starsAt(tid,i,m){ const e=scoreEntry(tid,i); return Array.isArray(e) ? (e[m]||0) : null; } // null = per-match not recorded
 function resultAt(tid,i,m){ return (((DATA.results||{})[tid]||{})[i]||[])[m] || ''; }
-function playerTotal(tid,i){ let s=0; for(let m=0;m<DATA.matches;m++) s+=starsAt(tid,i,m); return s; }
+function playerTotal(tid,i){ const e=scoreEntry(tid,i); if(typeof e==='number') return e; let s=0; if(Array.isArray(e)) for(let m=0;m<DATA.matches;m++) s+=(e[m]||0); return s; }
+function playerPoints(tid,i){ let p=0; for(let m=0;m<DATA.matches;m++) if(resultAt(tid,i,m)==='W') p++; return p; }  // win=1, lose=0
 function teamTotal(tid){ const t=DATA.teams.find(x=>x.id===tid); return t.players.reduce((a,_,i)=>a+playerTotal(tid,i),0); }
 function pName(pl){ return typeof pl==='string' ? pl : pl.name; }
 function pElim(pl){ return typeof pl==='object' && !!pl.eliminated; }
@@ -399,19 +404,19 @@ function render(){
     const card = document.createElement('div');
     card.className = 'team '+t.id;
 
-    // rank members within the team by total stars (highest first)
+    // rank members by points first, then by total stars
     const order = t.players
-      .map((pl,i)=>({name:pName(pl), photo:pPhoto(pl), elim:pElim(pl), flag:pFlag(pl), msg:pMsg(pl), i, total:playerTotal(t.id,i)}))
-      .sort((a,b)=> b.total-a.total || a.i-b.i);
+      .map((pl,i)=>({name:pName(pl), photo:pPhoto(pl), elim:pElim(pl), flag:pFlag(pl), msg:pMsg(pl), i, total:playerTotal(t.id,i), points:playerPoints(t.id,i)}))
+      .sort((a,b)=> b.points-a.points || b.total-a.total || a.i-b.i);
 
     let rows = '';
-    order.forEach(({name,photo,elim,flag,msg,i,total},rankIdx)=>{
+    order.forEach(({name,photo,elim,flag,msg,i,total,points},rankIdx)=>{
       const rank = rankIdx+1;
       const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
       const span = DATA.matches;
       let avatar =
         `<img class="avatar" src="${photo}" alt="" data-dot="${dot}" data-ini="${initials(name)}" onerror="imgFail(this)">`;
-      const leader = !elim && rank===1 && total>0;   // team's top scorer gets the fire aura
+      const leader = !elim && rank===1 && (points>0 || total>0);   // team's leader gets the fire aura
       const deco = (flag?`<span class="flagbadge">${flag}</span>`:'') + (msg?`<span class="msgbox">${esc(msg)}</span>`:'');
       if(elim){
         avatar = `<span class="elim-wrap">${avatar}<span class="boot">🥾</span><span class="dizzy">💫</span><span class="stamp">OUT!</span><span class="plane">✈️</span><span class="flag">🇨🇳</span><span class="byebye">再见!</span></span>`;
@@ -428,10 +433,12 @@ function render(){
           rows += `<td class="player" rowspan="${span}"><span class="${cellCls}">${avatar}<span class="pname">${esc(name)}${elim?'<span class="elim-tag">ELIMINATED</span>':''}</span></span></td>`;
         }
         rows += `<td class="match-no">${m+1}</td>`;
-        rows += `<td class="stars-cell">${starsAt(t.id,i,m)}</td>`;
+        const st = starsAt(t.id,i,m);
+        rows += `<td class="stars-cell">${st==null ? '<span class="wl none">–</span>' : st}</td>`;
         const wl = resultAt(t.id,i,m);
         rows += `<td>${wl==='W'?'<span class="wl w">WIN</span>':wl==='L'?'<span class="wl l">LOSE</span>':'<span class="wl none">–</span>'}</td>`;
         if(m===0){
+          rows += `<td class="point-cell" rowspan="${span}">${points}<span class="pt">pt</span></td>`;
           rows += `<td class="total-cell" rowspan="${span}">${total} <span class="s">⭐</span></td>`;
         }
         rows += '</tr>';
@@ -451,6 +458,7 @@ function render(){
             <th>Match</th>
             <th>Stars</th>
             <th>W/L</th>
+            <th>Point</th>
             <th>Total&nbsp;Stars</th>
           </tr></thead>
           <tbody>${rows}</tbody>
