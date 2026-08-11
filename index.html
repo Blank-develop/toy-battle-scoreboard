@@ -261,6 +261,25 @@
     .fx-wrap .flame{animation:none}
     .fx-wrap .spark{animation:none; opacity:0}
   }
+  /* ---- flag badge + speech bubble ---- */
+  .deco-wrap{position:relative; display:inline-flex; flex:none}
+  .flagbadge{
+    position:absolute; right:-4px; bottom:-4px; width:24px; height:24px; border-radius:50%;
+    background:#fff; display:grid; place-items:center; font-size:14px; overflow:hidden;
+    box-shadow:0 1px 3px rgba(0,0,0,.35); z-index:3; line-height:1;
+  }
+  .msgbox{
+    position:absolute; bottom:calc(100% + 9px); left:50%; transform:translateX(-50%);
+    background:#2b2b24; color:#fff; font-size:11px; font-weight:700; white-space:nowrap;
+    padding:5px 9px; border-radius:10px; z-index:7; box-shadow:0 3px 9px rgba(0,0,0,.28);
+    animation:msgBob 2.2s ease-in-out infinite;
+  }
+  .msgbox::after{
+    content:""; position:absolute; top:100%; left:50%; margin-left:-6px;
+    border:6px solid transparent; border-top-color:#2b2b24;
+  }
+  @keyframes msgBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-3px)}}
+  @media(prefers-reduced-motion:reduce){ .msgbox{animation:none} }
   .match-no{color:var(--muted); font-variant-numeric:tabular-nums; font-weight:600}
   .stars-cell{font-weight:800; font-variant-numeric:tabular-nums; color:var(--ink)}
   .wl{
@@ -338,7 +357,7 @@ const DATA = {
     {id:'team1', name:'Team 1', players:[{name:'ຄົນຈີນ', photo:'Noy.png', eliminated:true}, 'Pele', 'Bob']},
     {id:'team2', name:'Team 2', players:[{name:'ເຕັກໂນໂລເຈຍ/ບູລີ່ຄົນຈີນ', photo:'Lasun.png'}, {name:'ໄທທ່າແຂກໃນເມືອງ', photo:'Moto.png'}, 'Bank']},
     {id:'team3', name:'Team 3', players:['Katai', 'Mui', {name:'ຫົວໜ້າກົມ', photo:'Alo.png'}]},
-    {id:'team4', name:'Team 4', players:['Aiy Savath', 'Nico', 'Mina']},
+    {id:'team4', name:'Team 4', players:['Aiy Savath', {name:'Nico', photo:'Nico.jpeg', flag:'🇫🇷', msg:'Why too easy 🥱'}, 'Mina']},
   ],
   // scores[teamId][playerIndex] = [starsMatch1, starsMatch2]
   scores:{
@@ -362,6 +381,8 @@ function playerTotal(tid,i){ let s=0; for(let m=0;m<DATA.matches;m++) s+=starsAt
 function teamTotal(tid){ const t=DATA.teams.find(x=>x.id===tid); return t.players.reduce((a,_,i)=>a+playerTotal(tid,i),0); }
 function pName(pl){ return typeof pl==='string' ? pl : pl.name; }
 function pElim(pl){ return typeof pl==='object' && !!pl.eliminated; }
+function pFlag(pl){ return typeof pl==='object' ? (pl.flag||'') : ''; }
+function pMsg(pl){ return typeof pl==='object' ? (pl.msg||'') : ''; }
 function pPhoto(pl){ return encodeURI(typeof pl==='string' ? pl.trim().replace(/\s+/g,'_')+'.png' : (pl.photo || pl.name.trim().replace(/\s+/g,'_')+'.png')); }
 function initials(name){ return String(name).trim().split(/\s+/).map(w=>Array.from(w)[0]||'').slice(0,2).join('').toUpperCase()||'?'; }
 function imgFail(el){ const s=document.createElement('span'); s.className='avatar ph'; s.style.background=el.dataset.dot; s.textContent=el.dataset.ini; el.replaceWith(s); }
@@ -380,21 +401,24 @@ function render(){
 
     // rank members within the team by total stars (highest first)
     const order = t.players
-      .map((pl,i)=>({name:pName(pl), photo:pPhoto(pl), elim:pElim(pl), i, total:playerTotal(t.id,i)}))
+      .map((pl,i)=>({name:pName(pl), photo:pPhoto(pl), elim:pElim(pl), flag:pFlag(pl), msg:pMsg(pl), i, total:playerTotal(t.id,i)}))
       .sort((a,b)=> b.total-a.total || a.i-b.i);
 
     let rows = '';
-    order.forEach(({name,photo,elim,i,total},rankIdx)=>{
+    order.forEach(({name,photo,elim,flag,msg,i,total},rankIdx)=>{
       const rank = rankIdx+1;
       const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
       const span = DATA.matches;
       let avatar =
         `<img class="avatar" src="${photo}" alt="" data-dot="${dot}" data-ini="${initials(name)}" onerror="imgFail(this)">`;
       const leader = !elim && rank===1 && total>0;   // team's top scorer gets the fire aura
+      const deco = (flag?`<span class="flagbadge">${flag}</span>`:'') + (msg?`<span class="msgbox">${esc(msg)}</span>`:'');
       if(elim){
         avatar = `<span class="elim-wrap">${avatar}<span class="boot">🥾</span><span class="dizzy">💫</span><span class="stamp">OUT!</span><span class="plane">✈️</span><span class="flag">🇨🇳</span><span class="byebye">再见!</span></span>`;
       } else if(leader){
-        avatar = `<span class="fx-wrap"><span class="aura"></span>${avatar}<span class="flame">🔥</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span></span>`;
+        avatar = `<span class="fx-wrap"><span class="aura"></span>${avatar}<span class="flame">🔥</span><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span>${deco}</span>`;
+      } else if(deco){
+        avatar = `<span class="deco-wrap">${avatar}${deco}</span>`;
       }
       const cellCls = 'player-cell' + (elim ? ' elim' : '') + (leader ? ' lead' : '');
       for(let m=0; m<DATA.matches; m++){
