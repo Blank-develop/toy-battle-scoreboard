@@ -381,15 +381,15 @@ const DATA = {
   // scores[teamId][playerIndex] = [starsMatch1, starsMatch2]
   scores:{
     team1:{ 0:[10,16], 1:[17,21], 2:[15,19] },   // Noy 10/16, Pele 17/21, Bob 15/19
-    team2:{ 0:[0,0],   1:[2,0],   2:[16,0] },     // Lasun 0, Moto 2, Bank 16
+    team2:{ 0:[16,16], 1:[2,15],  2:[16,6] },     // Lasun 16/16, Moto 2/15, Bank 16/6
     team3:{ 0:[0,0],   1:[8,0],   2:[14,0] },     // Katai 0, Mui 8, Alo 14
     team4:{ 0:14, 1:27, 2:15 },   // totals only (per-match split not recorded): Aiy Savath 14, Nico 27, Mina 15
   },
   // results[teamId][playerIndex] = ['W'|'L'|'' per match]
   results:{
     team1:{ 0:['L','W'], 1:['L','W'], 2:['W','L'] },  // Noy L/W, Pele L/W, Bob W/L
-    team2:{ 1:['L',''],  2:['W',''] },                 // Moto lose, Bank win
-    team3:{ 1:['L',''],  2:['W',''] },                 // Mui lose, Alo win
+    team2:{ 0:['L',''],  1:['L','W'], 2:['W','L'] },   // Lasun L/–, Moto L/W, Bank W/L
+    team3:{ 0:['L','W'], 1:['L','L'], 2:['W',''] },    // Katai L/W, Mui L/L, Alo W/–
     team4:{ 0:['L','W'], 1:['W','W'], 2:['L','L'] },  // Aiy Savath L/W, Nico W/W, Mina L/L
   },
 };
