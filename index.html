@@ -62,6 +62,34 @@
   .lead-card .sc{margin-left:auto; font-weight:900; font-size:16px; color:var(--star); white-space:nowrap}
   .lead-card .swatch{position:absolute; left:0; top:0; bottom:0; width:5px}
 
+  /* ---------- Round matchups roadmap ---------- */
+  .road{margin:0 0 22px}
+  .road-h{font-size:18px; letter-spacing:.3px; margin:0 0 14px}
+  .road-track{position:relative; padding-left:6px}
+  .road-track::before{content:""; position:absolute; left:21px; top:16px; bottom:16px; width:3px; border-radius:2px; background:linear-gradient(#f5c542,#e0a80f)}
+  .road-node{position:relative; padding-left:52px; margin-bottom:14px}
+  .road-node:last-child{margin-bottom:0}
+  .road-num{
+    position:absolute; left:7px; top:50%; transform:translateY(-50%);
+    width:30px; height:30px; border-radius:50%; background:linear-gradient(#f5c542,#eab019);
+    color:#4a3600; font-weight:900; display:grid; place-items:center; z-index:1;
+    box-shadow:0 2px 6px rgba(0,0,0,.22); border:2px solid #fff;
+  }
+  .vs-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    box-shadow:0 4px 12px rgba(0,0,0,.07); padding:10px 14px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .vs-side{display:flex; align-items:center; gap:10px; flex:1 1 0; min-width:0}
+  .vs-side.right{flex-direction:row-reverse; text-align:right}
+  .vs-avatar{width:54px; height:54px; border-radius:50%; object-fit:cover; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.2); flex:none}
+  .vs-name{font-weight:800; font-size:15px; display:flex; align-items:center; gap:6px; min-width:0}
+  .vs-side.right .vs-name{flex-direction:row-reverse}
+  .vs-dot{width:9px; height:9px; border-radius:50%; flex:none}
+  .vs-flag{font-size:15px}
+  .vs-mid{display:flex; flex-direction:column; align-items:center; color:var(--muted); font-weight:900; font-size:11px; letter-spacing:.5px; flex:none}
+  .vs-mid .sw{font-size:20px; line-height:1}
+
   /* ---------- Team grid ---------- */
   .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:18px}
   .team{
@@ -336,6 +364,13 @@
     .avatar.ph{font-size:18px}
     .total-cell{font-size:14px}
     .wl{min-width:34px; padding:3px 5px; font-size:9px}
+    .vs-card{padding:9px 10px; gap:6px}
+    .vs-avatar{width:44px; height:44px}
+    .vs-name{font-size:13px}
+    .road-node{padding-left:46px}
+    .road-track::before{left:18px}
+    .road-num{width:26px; height:26px; left:6px; font-size:13px}
+    .road-h{font-size:16px}
   }
   @media(max-width:380px){
     .leader{grid-template-columns:1fr}
@@ -356,6 +391,11 @@
   </header>
 
   <div class="leader" id="leader"></div>
+
+  <section class="road">
+    <h3 class="road-h">Round Matchups 🎲</h3>
+    <div class="road-track" id="road"></div>
+  </section>
 
   <div class="grid" id="grid"></div>
 
@@ -394,7 +434,16 @@ const DATA = {
   },
 };
 
+/* Round matchups (this round's random draw) — [teamId, playerIndex, shortLabel] per side */
+const MATCHUPS = [
+  [ ['team1',1,'Pele'],  ['team2',2,'Bank'] ],
+  [ ['team2',0,'Lasun'], ['team4',0,'Savath'] ],
+  [ ['team3',2,'Alo'],   ['team1',2,'Bob'] ],
+  [ ['team4',1,'Nico'],  ['team3',0,'Katai'] ],
+];
+
 /* ---------------- Helpers ---------------- */
+function getPlayer(tid,idx){ const t=DATA.teams.find(x=>x.id===tid); return t ? t.players[idx] : null; }
 function scoreEntry(tid,i){ return (DATA.scores[tid]||{})[i]; }
 function starsAt(tid,i,m){ const e=scoreEntry(tid,i); return Array.isArray(e) ? (e[m]||0) : null; } // null = per-match not recorded
 function resultAt(tid,i,m){ return (((DATA.results||{})[tid]||{})[i]||[])[m] || ''; }
@@ -490,6 +539,30 @@ function render(){
   });
 
   renderLeader();
+  renderRoad();
+}
+
+function renderRoad(){
+  const el = document.getElementById('road');
+  if(!el) return;
+  const side = (ref, right)=>{
+    const [tid,i,label] = ref;
+    const pl = getPlayer(tid,i);
+    const dot = COLORS[tid].dot;
+    const name = label || pName(pl);
+    const flag = pl ? pFlag(pl) : '';
+    const av = `<img class="vs-avatar" src="${pPhoto(pl)}" alt="" data-dot="${dot}" data-ini="${initials(name)}" onerror="imgFail(this)">`;
+    return `<div class="vs-side${right?' right':''}">${av}<span class="vs-name"><span class="vs-dot" style="background:${dot}"></span>${esc(name)}${flag?`<span class="vs-flag">${flag}</span>`:''}</span></div>`;
+  };
+  el.innerHTML = MATCHUPS.map((m,idx)=>`
+    <div class="road-node">
+      <span class="road-num">${idx+1}</span>
+      <div class="vs-card">
+        ${side(m[0],false)}
+        <div class="vs-mid"><span class="sw">⚔️</span><span>VS</span></div>
+        ${side(m[1],true)}
+      </div>
+    </div>`).join('');
 }
 
 function renderLeader(){
