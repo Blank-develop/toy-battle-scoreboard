@@ -89,6 +89,57 @@
   .vs-flag{font-size:15px}
   .vs-mid{display:flex; flex-direction:column; align-items:center; color:var(--muted); font-weight:900; font-size:11px; letter-spacing:.5px; flex:none}
   .vs-mid .sw{font-size:20px; line-height:1}
+  .vs-mid.decided .vs-score{color:#1e7a3d; font-size:14px}
+  /* decided matchup: winner / loser */
+  .vs-winner .vs-avatar{border-color:#2ecc71; box-shadow:0 0 0 2px #2ecc71, 0 0 12px rgba(46,204,113,.55)}
+  .vs-winner .vs-name{color:#1e7a3d}
+  .vs-trophy{font-size:15px}
+  .vs-loser .vs-avatar{filter:grayscale(.85) opacity(.85)}
+  .vs-loser .vs-name{color:var(--muted); text-decoration:line-through}
+  /* shoot effect: Bob (right) fires at Alo (left) */
+  .vs-card.shoot{position:relative}
+  .shoot-gun{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:24px; z-index:4; animation:gunRecoil 3s ease-in-out infinite}
+  @keyframes gunRecoil{
+    0%,30%{transform:translate(-50%,-50%) rotate(0)}
+    35%{transform:translate(-42%,-50%) rotate(-10deg)}   /* recoil */
+    44%{transform:translate(-50%,-50%) rotate(0)}
+    100%{transform:translate(-50%,-50%) rotate(0)}
+  }
+  .shoot-bullet{
+    position:absolute; top:50%; left:47%; width:9px; height:4px; border-radius:2px;
+    background:#f5b301; box-shadow:0 0 7px 1px #f5b301; transform:translateY(-50%); opacity:0; z-index:4;
+    animation:bulletFly 3s ease-in-out infinite;
+  }
+  @keyframes bulletFly{
+    0%,35%{opacity:0; left:47%}
+    38%{opacity:1; left:45%}
+    52%{opacity:1; left:10%}
+    55%{opacity:0; left:8%}
+    100%{opacity:0; left:8%}
+  }
+  .shoot-flash{
+    position:absolute; top:50%; left:8%; transform:translate(-50%,-50%) scale(0);
+    font-size:24px; z-index:5; opacity:0; animation:shootFlash 3s ease-in-out infinite;
+  }
+  @keyframes shootFlash{
+    0%,52%{opacity:0; transform:translate(-50%,-50%) scale(0)}
+    56%{opacity:1; transform:translate(-50%,-50%) scale(1.35)}
+    66%{opacity:1; transform:translate(-50%,-50%) scale(1)}
+    74%,100%{opacity:0; transform:translate(-50%,-50%) scale(1)}
+  }
+  .vs-card.shoot .vs-loser .vs-avatar{animation:aloHit 3s ease-in-out infinite}
+  @keyframes aloHit{
+    0%,54%{transform:rotate(0) translateY(0)}
+    58%{transform:rotate(-12deg) translateY(2px)}   /* jolt on impact */
+    66%{transform:rotate(12deg) translateY(4px)}
+    74%{transform:rotate(32deg) translateY(9px)}    /* knocked down */
+    82%{transform:rotate(24deg) translateY(7px)}
+    90%,100%{transform:rotate(0) translateY(0)}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .shoot-gun,.shoot-bullet,.shoot-flash,.vs-card.shoot .vs-loser .vs-avatar{animation:none}
+    .shoot-bullet,.shoot-flash{opacity:0}
+  }
 
   /* ---------- Team grid ---------- */
   .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:18px}
@@ -413,9 +464,9 @@ const DATA = {
   matches: 2,
   // a player is either "Name" (photo derived from name) or {name, photo}
   teams: [
-    {id:'team1', name:'Team 1', players:[{name:'ຄົນຈີນ', photo:'Noy.png', eliminated:true, flag:'🇨🇳', bye:'再见!'}, {name:'Pele', flag:'🇰🇭'}, {name:'Bob', msg:'ຢາກຕົບອ້າຍນ້ອຍ', msgFun:true}]},
+    {id:'team1', name:'Team 1', players:[{name:'ຄົນຈີນ', photo:'Noy.png', eliminated:true, flag:'🇨🇳', bye:'再见!'}, {name:'Pele', flag:'🇰🇭'}, {name:'Bob', msg:'ນຶກວ່າຫຼິ້ນກັບບັອດ', msgFun:true}]},
     {id:'team2', name:'Team 2', players:[{name:'ເຕັກໂນໂລເຈຍ/ບູລີ່ຄົນຈີນ', photo:'Lasun.png'}, {name:'ໄທທ່າແຂກໃນເມືອງ', photo:'Moto.png', eliminated:true, flag:'👋', bye:'ລາກ່ອນ!'}, 'Bank']},
-    {id:'team3', name:'Team 3', players:['Katai', {name:'Mui', eliminated:true, flag:'👋', bye:'ລາກ່ອນ!'}, {name:'ຫົວໜ້າກົມ', photo:'Alo.png'}]},
+    {id:'team3', name:'Team 3', players:['Katai', {name:'Mui', eliminated:true, flag:'👋', bye:'ລາກ່ອນ!'}, {name:'ຫົວໜ້າກົມ', photo:'Alo.png', eliminated:true, flag:'👋', bye:'ລາກ່ອນ!'}]},
     {id:'team4', name:'Team 4', players:[{name:'Aiy Savath', flag:'🇦🇷'}, {name:'Nico', photo:'Nico.jpeg', flag:'🇫🇷', msg:'Why too easy 🥱'}, {name:'Mina', flag:'🇯🇵', eliminated:true, bye:'さよなら!'}]},
   ],
   // scores[teamId][playerIndex] = [starsMatch1, starsMatch2]
@@ -436,10 +487,10 @@ const DATA = {
 
 /* Round matchups (this round's random draw) — [teamId, playerIndex, shortLabel] per side */
 const MATCHUPS = [
-  [ ['team1',1,'Pele'],  ['team2',2,'Bank'] ],
-  [ ['team2',0,'Lasun'], ['team4',0,'Savath'] ],
-  [ ['team3',2,'Alo'],   ['team1',2,'Bob'] ],
-  [ ['team4',1,'Nico'],  ['team3',0,'Katai'] ],
+  { a:['team1',1,'Pele'],  b:['team2',2,'Bank'] },
+  { a:['team2',0,'Lasun'], b:['team4',0,'Savath'] },
+  { a:['team3',2,'Alo'],   b:['team1',2,'Bob'], winner:'b', score:'3–1', fx:'shoot' },
+  { a:['team4',1,'Nico'],  b:['team3',0,'Katai'] },
 ];
 
 /* ---------------- Helpers ---------------- */
@@ -545,24 +596,36 @@ function render(){
 function renderRoad(){
   const el = document.getElementById('road');
   if(!el) return;
-  const side = (ref, right)=>{
+  const side = (ref, pos, mu)=>{
     const [tid,i,label] = ref;
     const pl = getPlayer(tid,i);
     const dot = COLORS[tid].dot;
     const name = label || pName(pl);
     const flag = pl ? pFlag(pl) : '';
+    const right = pos==='b';
+    const isWin  = mu.winner===pos;
+    const isLose = mu.winner && mu.winner!==pos;
+    const cls = 'vs-side'+(right?' right':'')+(isWin?' vs-winner':'')+(isLose?' vs-loser':'');
     const av = `<img class="vs-avatar" src="${pPhoto(pl)}" alt="" data-dot="${dot}" data-ini="${initials(name)}" onerror="imgFail(this)">`;
-    return `<div class="vs-side${right?' right':''}">${av}<span class="vs-name"><span class="vs-dot" style="background:${dot}"></span>${esc(name)}${flag?`<span class="vs-flag">${flag}</span>`:''}</span></div>`;
+    const trophy = isWin ? '<span class="vs-trophy">🏆</span>' : '';
+    return `<div class="${cls}">${av}<span class="vs-name">${trophy}<span class="vs-dot" style="background:${dot}"></span>${esc(name)}${flag?`<span class="vs-flag">${flag}</span>`:''}</span></div>`;
   };
-  el.innerHTML = MATCHUPS.map((m,idx)=>`
-    <div class="road-node">
+  el.innerHTML = MATCHUPS.map((mu,idx)=>{
+    const shoot = mu.fx==='shoot';
+    const mid = mu.winner
+      ? `<div class="vs-mid decided"><span class="sw">⚔️</span><span class="vs-score">${mu.score||'VS'}</span></div>`
+      : `<div class="vs-mid"><span class="sw">⚔️</span><span>VS</span></div>`;
+    const shootFx = shoot ? `<span class="shoot-gun">🔫</span><span class="shoot-bullet"></span><span class="shoot-flash">💥</span>` : '';
+    return `<div class="road-node">
       <span class="road-num">${idx+1}</span>
-      <div class="vs-card">
-        ${side(m[0],false)}
-        <div class="vs-mid"><span class="sw">⚔️</span><span>VS</span></div>
-        ${side(m[1],true)}
+      <div class="vs-card${shoot?' shoot':''}">
+        ${side(mu.a,'a',mu)}
+        ${mid}
+        ${side(mu.b,'b',mu)}
+        ${shootFx}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderLeader(){
