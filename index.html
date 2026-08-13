@@ -96,31 +96,44 @@
   .vs-trophy{font-size:15px}
   .vs-loser .vs-avatar{filter:grayscale(.85) opacity(.85)}
   .vs-loser .vs-name{color:var(--muted); text-decoration:line-through}
-  /* shoot effect: Bob (right) fires at Alo (left) */
+  /* shoot effect: Bob (right) fires at Alo (left) — gun sits by Bob's profile */
   .vs-card.shoot{position:relative}
-  .shoot-gun{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:24px; z-index:4; animation:gunRecoil 3s ease-in-out infinite}
+  .shoot-gun{position:absolute; right:78px; top:50%; transform:translateY(-50%); font-size:24px; z-index:4; animation:gunRecoil 3s ease-in-out infinite}
   @keyframes gunRecoil{
-    0%,30%{transform:translate(-50%,-50%) rotate(0)}
-    35%{transform:translate(-42%,-50%) rotate(-10deg)}   /* recoil */
-    44%{transform:translate(-50%,-50%) rotate(0)}
-    100%{transform:translate(-50%,-50%) rotate(0)}
+    0%,30%{transform:translateY(-50%) translateX(0) rotate(0)}
+    35%{transform:translateY(-50%) translateX(7px) rotate(-10deg)}   /* recoil back toward Bob */
+    44%{transform:translateY(-50%) translateX(0) rotate(0)}
+    100%{transform:translateY(-50%) translateX(0) rotate(0)}
   }
   .shoot-bullet{
-    position:absolute; top:50%; left:47%; width:9px; height:4px; border-radius:2px;
+    position:absolute; top:50%; right:96px; width:9px; height:4px; border-radius:2px;
     background:#f5b301; box-shadow:0 0 7px 1px #f5b301; transform:translateY(-50%); opacity:0; z-index:4;
     animation:bulletFly 3s ease-in-out infinite;
   }
   @keyframes bulletFly{
-    0%,35%{opacity:0; left:47%}
-    38%{opacity:1; left:45%}
-    52%{opacity:1; left:10%}
-    55%{opacity:0; left:8%}
-    100%{opacity:0; left:8%}
+    0%,35%{opacity:0; right:96px}
+    38%{opacity:1; right:108px}
+    52%{opacity:1; right:calc(100% - 58px)}   /* reaches Alo on the left */
+    55%{opacity:0; right:calc(100% - 46px)}
+    100%{opacity:0; right:calc(100% - 46px)}
   }
   .shoot-flash{
-    position:absolute; top:50%; left:8%; transform:translate(-50%,-50%) scale(0);
+    position:absolute; top:50%; left:42px; transform:translate(-50%,-50%) scale(0);
     font-size:24px; z-index:5; opacity:0; animation:shootFlash 3s ease-in-out infinite;
   }
+  /* roadmap taunt bubble (match-round only) */
+  .vs-card.has-msg{padding-top:34px}
+  .vs-msg{
+    position:absolute; top:5px; z-index:6; white-space:nowrap;
+    background:linear-gradient(135deg,#e74c3c,#c0392b); color:#fff;
+    font-size:11px; font-weight:700; padding:4px 9px; border-radius:10px;
+    box-shadow:0 3px 10px rgba(192,57,43,.5); animation:msgFun 1.1s ease-in-out infinite;
+  }
+  .vs-msg.r{right:14px}
+  .vs-msg.l{left:14px}
+  .vs-msg::after{content:""; position:absolute; top:100%; border:6px solid transparent; border-top-color:#c0392b}
+  .vs-msg.r::after{right:26px}
+  .vs-msg.l::after{left:26px}
   @keyframes shootFlash{
     0%,52%{opacity:0; transform:translate(-50%,-50%) scale(0)}
     56%{opacity:1; transform:translate(-50%,-50%) scale(1.35)}
@@ -137,7 +150,7 @@
     90%,100%{transform:rotate(0) translateY(0)}
   }
   @media(prefers-reduced-motion:reduce){
-    .shoot-gun,.shoot-bullet,.shoot-flash,.vs-card.shoot .vs-loser .vs-avatar{animation:none}
+    .shoot-gun,.shoot-bullet,.shoot-flash,.vs-card.shoot .vs-loser .vs-avatar,.vs-msg{animation:none}
     .shoot-bullet,.shoot-flash{opacity:0}
   }
 
@@ -464,7 +477,7 @@ const DATA = {
   matches: 2,
   // a player is either "Name" (photo derived from name) or {name, photo}
   teams: [
-    {id:'team1', name:'Team 1', players:[{name:'ຄົນຈີນ', photo:'Noy.png', eliminated:true, flag:'🇨🇳', bye:'再见!'}, {name:'Pele', flag:'🇰🇭'}, {name:'Bob', msg:'ນຶກວ່າຫຼິ້ນກັບບັອດ', msgFun:true}]},
+    {id:'team1', name:'Team 1', players:[{name:'ຄົນຈີນ', photo:'Noy.png', eliminated:true, flag:'🇨🇳', bye:'再见!'}, {name:'Pele', flag:'🇰🇭'}, 'Bob']},
     {id:'team2', name:'Team 2', players:[{name:'ເຕັກໂນໂລເຈຍ/ບູລີ່ຄົນຈີນ', photo:'Lasun.png'}, {name:'ໄທທ່າແຂກໃນເມືອງ', photo:'Moto.png', eliminated:true, flag:'👋', bye:'ລາກ່ອນ!'}, 'Bank']},
     {id:'team3', name:'Team 3', players:['Katai', {name:'Mui', eliminated:true, flag:'👋', bye:'ລາກ່ອນ!'}, {name:'ຫົວໜ້າກົມ', photo:'Alo.png', eliminated:true, flag:'👋', bye:'ລາກ່ອນ!'}]},
     {id:'team4', name:'Team 4', players:[{name:'Aiy Savath', flag:'🇦🇷'}, {name:'Nico', photo:'Nico.jpeg', flag:'🇫🇷', msg:'Why too easy 🥱'}, {name:'Mina', flag:'🇯🇵', eliminated:true, bye:'さよなら!'}]},
@@ -489,7 +502,7 @@ const DATA = {
 const MATCHUPS = [
   { a:['team1',1,'Pele'],  b:['team2',2,'Bank'] },
   { a:['team2',0,'Lasun'], b:['team4',0,'Savath'] },
-  { a:['team3',2,'Alo'],   b:['team1',2,'Bob'], winner:'b', score:'3–1', fx:'shoot' },
+  { a:['team3',2,'Alo'],   b:['team1',2,'Bob','ນຶກວ່າຫຼິ້ນກັບບັອດ'], winner:'b', score:'3–1', fx:'shoot' },
   { a:['team4',1,'Nico'],  b:['team3',0,'Katai'] },
 ];
 
@@ -597,7 +610,7 @@ function renderRoad(){
   const el = document.getElementById('road');
   if(!el) return;
   const side = (ref, pos, mu)=>{
-    const [tid,i,label] = ref;
+    const [tid,i,label,msg] = ref;
     const pl = getPlayer(tid,i);
     const dot = COLORS[tid].dot;
     const name = label || pName(pl);
@@ -608,17 +621,19 @@ function renderRoad(){
     const cls = 'vs-side'+(right?' right':'')+(isWin?' vs-winner':'')+(isLose?' vs-loser':'');
     const av = `<img class="vs-avatar" src="${pPhoto(pl)}" alt="" data-dot="${dot}" data-ini="${initials(name)}" onerror="imgFail(this)">`;
     const trophy = isWin ? '<span class="vs-trophy">🏆</span>' : '';
-    return `<div class="${cls}">${av}<span class="vs-name">${trophy}<span class="vs-dot" style="background:${dot}"></span>${esc(name)}${flag?`<span class="vs-flag">${flag}</span>`:''}</span></div>`;
+    const bubble = msg ? `<span class="vs-msg ${right?'r':'l'}">${esc(msg)}</span>` : '';
+    return `<div class="${cls}">${av}<span class="vs-name">${trophy}<span class="vs-dot" style="background:${dot}"></span>${esc(name)}${flag?`<span class="vs-flag">${flag}</span>`:''}</span>${bubble}</div>`;
   };
   el.innerHTML = MATCHUPS.map((mu,idx)=>{
     const shoot = mu.fx==='shoot';
+    const hasMsg = !!(mu.a[3] || mu.b[3]);
     const mid = mu.winner
       ? `<div class="vs-mid decided"><span class="sw">⚔️</span><span class="vs-score">${mu.score||'VS'}</span></div>`
       : `<div class="vs-mid"><span class="sw">⚔️</span><span>VS</span></div>`;
     const shootFx = shoot ? `<span class="shoot-gun">🔫</span><span class="shoot-bullet"></span><span class="shoot-flash">💥</span>` : '';
     return `<div class="road-node">
       <span class="road-num">${idx+1}</span>
-      <div class="vs-card${shoot?' shoot':''}">
+      <div class="vs-card${shoot?' shoot':''}${hasMsg?' has-msg':''}">
         ${side(mu.a,'a',mu)}
         ${mid}
         ${side(mu.b,'b',mu)}
